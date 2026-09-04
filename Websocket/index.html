@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>WebSocket Chat</title>
+    <title>FastAPI WebSocket Chat</title>
 
     <style>
 
@@ -17,13 +17,17 @@
 
         body {
             font-family: Arial, sans-serif;
-            background: #f2f4f7;
+            background: #f1f5f9;
             height: 100vh;
         }
 
+        /* HEADER */
+
         .header {
             height: 70px;
+
             background: #2563eb;
+
             color: white;
 
             display: flex;
@@ -34,8 +38,13 @@
             font-weight: bold;
         }
 
+
+        /* CHAT CONTAINER */
+
         .chat-container {
+
             display: flex;
+
             gap: 20px;
 
             padding: 20px;
@@ -43,7 +52,11 @@
             height: calc(100vh - 70px);
         }
 
+
+        /* USER BOX */
+
         .user-box {
+
             flex: 1;
 
             background: white;
@@ -53,40 +66,61 @@
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 
             display: flex;
+
             flex-direction: column;
 
             overflow: hidden;
         }
 
+
+        /* USER HEADER */
+
         .user-header {
+
             padding: 18px;
 
             color: white;
 
             font-size: 20px;
+
             font-weight: bold;
 
             display: flex;
+
             justify-content: space-between;
+
             align-items: center;
         }
+
 
         .user1-header {
             background: #16a34a;
         }
 
+
         .user2-header {
             background: #9333ea;
         }
 
+
+        /* ONLINE STATUS */
+
         .status {
+
             font-size: 13px;
+
             background: #ffffff33;
+
             padding: 5px 10px;
+
             border-radius: 20px;
         }
 
+
+        /* MESSAGES */
+
         .messages {
+
             flex: 1;
 
             padding: 20px;
@@ -96,7 +130,9 @@
             background: #f8fafc;
         }
 
+
         .message {
+
             margin-bottom: 12px;
 
             padding: 10px 14px;
@@ -108,17 +144,27 @@
             word-wrap: break-word;
         }
 
+
         .user1-message {
+
             background: #dcfce7;
+
             margin-left: auto;
         }
 
+
         .user2-message {
+
             background: #ede9fe;
+
             margin-right: auto;
         }
 
+
+        /* INPUT */
+
         .input-area {
+
             display: flex;
 
             padding: 15px;
@@ -128,7 +174,9 @@
             gap: 10px;
         }
 
+
         .input-area input {
+
             flex: 1;
 
             padding: 12px;
@@ -142,11 +190,17 @@
             font-size: 15px;
         }
 
+
         .input-area input:focus {
+
             border-color: #2563eb;
         }
 
+
+        /* BUTTON */
+
         button {
+
             border: none;
 
             padding: 12px 20px;
@@ -160,41 +214,146 @@
             cursor: pointer;
         }
 
+
         .user1-button {
+
             background: #16a34a;
         }
 
+
         .user2-button {
+
             background: #9333ea;
         }
 
+
         button:hover {
+
             opacity: 0.85;
         }
+
+
+        /* NOTIFICATION POPUP */
+
+        .notification {
+
+            position: fixed;
+
+            top: 90px;
+
+            right: 25px;
+
+            width: 320px;
+
+            background: white;
+
+            border-radius: 12px;
+
+            padding: 18px;
+
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+
+            display: none;
+
+            z-index: 1000;
+
+            border-left: 5px solid #2563eb;
+
+            animation: slideIn 0.4s ease;
+        }
+
+
+        .notification-title {
+
+            font-size: 17px;
+
+            font-weight: bold;
+
+            margin-bottom: 8px;
+        }
+
+
+        .notification-message {
+
+            color: #475569;
+
+            font-size: 14px;
+        }
+
+
+        .notification-close {
+
+            position: absolute;
+
+            top: 8px;
+
+            right: 12px;
+
+            color: #64748b;
+
+            cursor: pointer;
+
+            font-size: 18px;
+        }
+
+
+        @keyframes slideIn {
+
+            from {
+
+                transform: translateX(100%);
+
+                opacity: 0;
+            }
+
+            to {
+
+                transform: translateX(0);
+
+                opacity: 1;
+            }
+
+        }
+
+
+        /* MOBILE */
 
         @media (max-width: 700px) {
 
             .chat-container {
+
                 flex-direction: column;
+
                 height: auto;
             }
 
+
             .user-box {
+
                 min-height: 500px;
             }
 
         }
 
     </style>
+
 </head>
 
 
 <body>
 
+
+    <!-- HEADER -->
+
     <div class="header">
+
         💬 FastAPI WebSocket Chat
+
     </div>
 
+
+
+    <!-- CHAT -->
 
     <div class="chat-container">
 
@@ -203,19 +362,25 @@
 
         <div class="user-box">
 
+
             <div class="user-header user1-header">
 
                 <span>👤 User 1</span>
 
-                <span id="status1" class="status">
+                <span
+                    id="status1"
+                    class="status"
+                >
                     Connecting...
                 </span>
 
             </div>
 
 
-            <div id="messages1" class="messages">
-            </div>
+            <div
+                id="messages1"
+                class="messages"
+            ></div>
 
 
             <div class="input-area">
@@ -227,6 +392,7 @@
                     onkeypress="handleEnter(event, 1)"
                 >
 
+
                 <button
                     class="user1-button"
                     onclick="sendMessage(1)"
@@ -236,6 +402,7 @@
 
             </div>
 
+
         </div>
 
 
@@ -244,19 +411,25 @@
 
         <div class="user-box">
 
+
             <div class="user-header user2-header">
 
                 <span>👤 User 2</span>
 
-                <span id="status2" class="status">
+                <span
+                    id="status2"
+                    class="status"
+                >
                     Connecting...
                 </span>
 
             </div>
 
 
-            <div id="messages2" class="messages">
-            </div>
+            <div
+                id="messages2"
+                class="messages"
+            ></div>
 
 
             <div class="input-area">
@@ -268,6 +441,7 @@
                     onkeypress="handleEnter(event, 2)"
                 >
 
+
                 <button
                     class="user2-button"
                     onclick="sendMessage(2)"
@@ -277,23 +451,62 @@
 
             </div>
 
+
         </div>
 
 
     </div>
 
 
+
+    <!-- POPUP NOTIFICATION -->
+
+    <div
+        id="notification"
+        class="notification"
+    >
+
+        <span
+            class="notification-close"
+            onclick="closeNotification()"
+        >
+            ✕
+        </span>
+
+
+        <div
+            id="notificationTitle"
+            class="notification-title"
+        >
+            🔔 New Message
+        </div>
+
+
+        <div
+            id="notificationMessage"
+            class="notification-message"
+        >
+        </div>
+
+    </div>
+
+
+
 <script>
 
+
     let socket1;
+
     let socket2;
 
 
-    // -------------------------
+
+    // =====================================
     // USER 1 CONNECTION
-    // -------------------------
+    // =====================================
 
     function connectUser1() {
+
 
         socket1 = new WebSocket(
             "ws://127.0.0.1:8000/ws/user1"
@@ -310,10 +523,29 @@
 
         socket1.onmessage = function(event) {
 
+
+            // Add message to User 1
+
             addMessage(
                 1,
                 event.data,
                 "user2-message"
+            );
+
+
+            // Show popup
+
+            showNotification(
+                "User 1",
+                event.data
+            );
+
+
+            // Browser notification
+
+            browserNotification(
+                "User 1",
+                event.data
             );
 
         };
@@ -330,11 +562,12 @@
 
 
 
-    // -------------------------
+    // =====================================
     // USER 2 CONNECTION
-    // -------------------------
+    // =====================================
 
     function connectUser2() {
+
 
         socket2 = new WebSocket(
             "ws://127.0.0.1:8000/ws/user2"
@@ -351,10 +584,29 @@
 
         socket2.onmessage = function(event) {
 
+
+            // Add message to User 2
+
             addMessage(
                 2,
                 event.data,
                 "user1-message"
+            );
+
+
+            // Show popup
+
+            showNotification(
+                "User 2",
+                event.data
+            );
+
+
+            // Browser notification
+
+            browserNotification(
+                "User 2",
+                event.data
             );
 
         };
@@ -371,21 +623,30 @@
 
 
 
-    // -------------------------
+    // =====================================
     // SEND MESSAGE
-    // -------------------------
+    // =====================================
 
     function sendMessage(user) {
 
+
         let input;
+
+
+        // USER 1
 
         if (user === 1) {
 
-            input = document.getElementById("input1");
+
+            input =
+                document.getElementById("input1");
+
 
             if (input.value.trim() !== "") {
 
+
                 socket1.send(input.value);
+
 
                 addMessage(
                     1,
@@ -393,19 +654,29 @@
                     "user1-message"
                 );
 
+
                 input.value = "";
+
             }
 
         }
 
 
+
+        // USER 2
+
         if (user === 2) {
 
-            input = document.getElementById("input2");
+
+            input =
+                document.getElementById("input2");
+
 
             if (input.value.trim() !== "") {
 
+
                 socket2.send(input.value);
+
 
                 addMessage(
                     2,
@@ -413,7 +684,9 @@
                     "user2-message"
                 );
 
+
                 input.value = "";
+
             }
 
         }
@@ -422,13 +695,19 @@
 
 
 
-    // -------------------------
-    // ADD MESSAGE TO SCREEN
-    // -------------------------
+    // =====================================
+    // ADD MESSAGE
+    // =====================================
 
-    function addMessage(user, message, className) {
+    function addMessage(
+        user,
+        message,
+        className
+    ) {
+
 
         let container;
+
 
         if (user === 1) {
 
@@ -443,12 +722,17 @@
         }
 
 
-        let div = document.createElement("div");
+        let div =
+            document.createElement("div");
+
 
         div.className =
             "message " + className;
 
-        div.innerText = message;
+
+        div.innerText =
+            message;
+
 
         container.appendChild(div);
 
@@ -460,11 +744,134 @@
 
 
 
-    // -------------------------
-    // ENTER KEY
-    // -------------------------
+    // =====================================
+    // SHOW POPUP
+    // =====================================
 
-    function handleEnter(event, user) {
+    function showNotification(
+        user,
+        message
+    ) {
+
+
+        document.getElementById(
+            "notificationTitle"
+        ).innerText =
+            "🔔 New Message from " + user;
+
+
+        document.getElementById(
+            "notificationMessage"
+        ).innerText =
+            message;
+
+
+        document.getElementById(
+            "notification"
+        ).style.display =
+            "block";
+
+
+        // Automatically hide after 4 seconds
+
+        setTimeout(
+            closeNotification,
+            4000
+        );
+
+    }
+
+
+
+    // =====================================
+    // CLOSE POPUP
+    // =====================================
+
+    function closeNotification() {
+
+
+        document.getElementById(
+            "notification"
+        ).style.display =
+            "none";
+
+    }
+
+
+
+    // =====================================
+    // BROWSER NOTIFICATION
+    // =====================================
+
+    function browserNotification(
+        user,
+        message
+    ) {
+
+
+        // Check browser support
+
+        if (!("Notification" in window)) {
+
+            return;
+
+        }
+
+
+        // Ask permission
+
+        if (Notification.permission === "default") {
+
+
+            Notification.requestPermission()
+                .then(function(permission) {
+
+
+                    if (permission === "granted") {
+
+                        new Notification(
+                            "💬 Message from " + user,
+                            {
+                                body: message
+                            }
+                        );
+
+                    }
+
+                });
+
+        }
+
+
+        // Already allowed
+
+        else if (
+            Notification.permission === "granted"
+        ) {
+
+
+            new Notification(
+                "💬 Message from " + user,
+                {
+                    body: message
+                }
+            );
+
+        }
+
+    }
+
+
+
+    // =====================================
+    // ENTER KEY
+    // =====================================
+
+    function handleEnter(
+        event,
+        user
+    ) {
+
 
         if (event.key === "Enter") {
 
@@ -476,15 +883,17 @@
 
 
 
-    // -------------------------
-    // START CONNECTIONS
-    // -------------------------
+    // =====================================
+    // START
+    // =====================================
 
     connectUser1();
 
     connectUser2();
 
+
 </script>
+
 
 </body>
 
