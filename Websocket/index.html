@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>WebSocket Chat</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f2f4f7;
+            height: 100vh;
+        }
+
+        .header {
+            height: 70px;
+            background: #2563eb;
+            color: white;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            font-size: 25px;
+            font-weight: bold;
+        }
+
+        .chat-container {
+            display: flex;
+            gap: 20px;
+
+            padding: 20px;
+
+            height: calc(100vh - 70px);
+        }
+
+        .user-box {
+            flex: 1;
+
+            background: white;
+
+            border-radius: 15px;
+
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+
+            display: flex;
+            flex-direction: column;
+
+            overflow: hidden;
+        }
+
+        .user-header {
+            padding: 18px;
+
+            color: white;
+
+            font-size: 20px;
+            font-weight: bold;
+
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user1-header {
+            background: #16a34a;
+        }
+
+        .user2-header {
+            background: #9333ea;
+        }
+
+        .status {
+            font-size: 13px;
+            background: #ffffff33;
+            padding: 5px 10px;
+            border-radius: 20px;
+        }
+
+        .messages {
+            flex: 1;
+
+            padding: 20px;
+
+            overflow-y: auto;
+
+            background: #f8fafc;
+        }
+
+        .message {
+            margin-bottom: 12px;
+
+            padding: 10px 14px;
+
+            border-radius: 12px;
+
+            max-width: 75%;
+
+            word-wrap: break-word;
+        }
+
+        .user1-message {
+            background: #dcfce7;
+            margin-left: auto;
+        }
+
+        .user2-message {
+            background: #ede9fe;
+            margin-right: auto;
+        }
+
+        .input-area {
+            display: flex;
+
+            padding: 15px;
+
+            border-top: 1px solid #ddd;
+
+            gap: 10px;
+        }
+
+        .input-area input {
+            flex: 1;
+
+            padding: 12px;
+
+            border: 1px solid #ccc;
+
+            border-radius: 8px;
+
+            outline: none;
+
+            font-size: 15px;
+        }
+
+        .input-area input:focus {
+            border-color: #2563eb;
+        }
+
+        button {
+            border: none;
+
+            padding: 12px 20px;
+
+            border-radius: 8px;
+
+            color: white;
+
+            font-weight: bold;
+
+            cursor: pointer;
+        }
+
+        .user1-button {
+            background: #16a34a;
+        }
+
+        .user2-button {
+            background: #9333ea;
+        }
+
+        button:hover {
+            opacity: 0.85;
+        }
+
+        @media (max-width: 700px) {
+
+            .chat-container {
+                flex-direction: column;
+                height: auto;
+            }
+
+            .user-box {
+                min-height: 500px;
+            }
+
+        }
+
+    </style>
+</head>
+
+
+<body>
+
+    <div class="header">
+        💬 FastAPI WebSocket Chat
+    </div>
+
+
+    <div class="chat-container">
+
+
+        <!-- USER 1 -->
+
+        <div class="user-box">
+
+            <div class="user-header user1-header">
+
+                <span>👤 User 1</span>
+
+                <span id="status1" class="status">
+                    Connecting...
+                </span>
+
+            </div>
+
+
+            <div id="messages1" class="messages">
+            </div>
+
+
+            <div class="input-area">
+
+                <input
+                    id="input1"
+                    type="text"
+                    placeholder="Type message..."
+                    onkeypress="handleEnter(event, 1)"
+                >
+
+                <button
+                    class="user1-button"
+                    onclick="sendMessage(1)"
+                >
+                    Send
+                </button>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- USER 2 -->
+
+        <div class="user-box">
+
+            <div class="user-header user2-header">
+
+                <span>👤 User 2</span>
+
+                <span id="status2" class="status">
+                    Connecting...
+                </span>
+
+            </div>
+
+
+            <div id="messages2" class="messages">
+            </div>
+
+
+            <div class="input-area">
+
+                <input
+                    id="input2"
+                    type="text"
+                    placeholder="Type message..."
+                    onkeypress="handleEnter(event, 2)"
+                >
+
+                <button
+                    class="user2-button"
+                    onclick="sendMessage(2)"
+                >
+                    Send
+                </button>
+
+            </div>
+
+        </div>
+
+
+    </div>
+
+
+<script>
+
+    let socket1;
+    let socket2;
+
+
+    // -------------------------
+    // USER 1 CONNECTION
+    // -------------------------
+
+    function connectUser1() {
+
+        socket1 = new WebSocket(
+            "ws://127.0.0.1:8000/ws/user1"
+        );
+
+
+        socket1.onopen = function() {
+
+            document.getElementById("status1").innerText =
+                "🟢 Online";
+
+        };
+
+
+        socket1.onmessage = function(event) {
+
+            addMessage(
+                1,
+                event.data,
+                "user2-message"
+            );
+
+        };
+
+
+        socket1.onclose = function() {
+
+            document.getElementById("status1").innerText =
+                "🔴 Offline";
+
+        };
+
+    }
+
+
+
+    // -------------------------
+    // USER 2 CONNECTION
+    // -------------------------
+
+    function connectUser2() {
+
+        socket2 = new WebSocket(
+            "ws://127.0.0.1:8000/ws/user2"
+        );
+
+
+        socket2.onopen = function() {
+
+            document.getElementById("status2").innerText =
+                "🟢 Online";
+
+        };
+
+
+        socket2.onmessage = function(event) {
+
+            addMessage(
+                2,
+                event.data,
+                "user1-message"
+            );
+
+        };
+
+
+        socket2.onclose = function() {
+
+            document.getElementById("status2").innerText =
+                "🔴 Offline";
+
+        };
+
+    }
+
+
+
+    // -------------------------
+    // SEND MESSAGE
+    // -------------------------
+
+    function sendMessage(user) {
+
+        let input;
+
+        if (user === 1) {
+
+            input = document.getElementById("input1");
+
+            if (input.value.trim() !== "") {
+
+                socket1.send(input.value);
+
+                addMessage(
+                    1,
+                    "You: " + input.value,
+                    "user1-message"
+                );
+
+                input.value = "";
+            }
+
+        }
+
+
+        if (user === 2) {
+
+            input = document.getElementById("input2");
+
+            if (input.value.trim() !== "") {
+
+                socket2.send(input.value);
+
+                addMessage(
+                    2,
+                    "You: " + input.value,
+                    "user2-message"
+                );
+
+                input.value = "";
+            }
+
+        }
+
+    }
+
+
+
+    // -------------------------
+    // ADD MESSAGE TO SCREEN
+    // -------------------------
+
+    function addMessage(user, message, className) {
+
+        let container;
+
+        if (user === 1) {
+
+            container =
+                document.getElementById("messages1");
+
+        } else {
+
+            container =
+                document.getElementById("messages2");
+
+        }
+
+
+        let div = document.createElement("div");
+
+        div.className =
+            "message " + className;
+
+        div.innerText = message;
+
+        container.appendChild(div);
+
+
+        container.scrollTop =
+            container.scrollHeight;
+
+    }
+
+
+
+    // -------------------------
+    // ENTER KEY
+    // -------------------------
+
+    function handleEnter(event, user) {
+
+        if (event.key === "Enter") {
+
+            sendMessage(user);
+
+        }
+
+    }
+
+
+
+    // -------------------------
+    // START CONNECTIONS
+    // -------------------------
+
+    connectUser1();
+
+    connectUser2();
+
+</script>
+
+</body>
+
+</html>
