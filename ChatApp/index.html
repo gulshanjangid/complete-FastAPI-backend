@@ -1,0 +1,1249 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>FastAPI JWT WebSocket Chat</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f1f5f9;
+            min-height: 100vh;
+        }
+
+        /* ============================= */
+        /* AUTH SCREEN */
+        /* ============================= */
+
+        .auth-screen {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100vh;
+            background: #f1f5f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .auth-box {
+            width: 400px;
+            max-width: 90%;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.15);
+            text-align: center;
+        }
+
+        .auth-box h2 {
+            margin-bottom: 10px;
+            color: #2563eb;
+        }
+
+        #authTitle {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .auth-box input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            outline: none;
+            font-size: 15px;
+        }
+
+        .auth-box input:focus {
+            border-color: #2563eb;
+        }
+
+        .auth-button,
+        .signup-button {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .auth-button {
+            background: #2563eb;
+        }
+
+        .signup-button {
+            background: #16a34a;
+        }
+
+        .logout-button {
+            background: #dc2626;
+            padding: 8px 15px;
+        }
+
+        #authMessage {
+            margin-top: 10px;
+            font-size: 14px;
+            min-height: 20px;
+        }
+
+        /* ============================= */
+        /* HEADER */
+        /* ============================= */
+
+        .header {
+            min-height: 70px;
+            background: #2563eb;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 25px;
+            font-size: 23px;
+            font-weight: bold;
+        }
+
+        .header-user {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 15px;
+        }
+
+        /* ============================= */
+        /* CHAT CONTAINER */
+        /* ============================= */
+
+        .chat-container {
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            height: calc(100vh - 70px);
+        }
+
+        .user-box {
+            width: 700px;
+            max-width: 100%;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* ============================= */
+        /* CHAT HEADER */
+        /* ============================= */
+
+        .user-header {
+            padding: 18px;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user1-header {
+            background: #16a34a;
+        }
+
+        .status {
+            font-size: 13px;
+            background: #ffffff33;
+            padding: 5px 10px;
+            border-radius: 20px;
+        }
+
+        /* ============================= */
+        /* MESSAGES */
+        /* ============================= */
+
+        .messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8fafc;
+        }
+
+        .message {
+            margin-bottom: 12px;
+            padding: 10px 14px;
+            border-radius: 12px;
+            max-width: 75%;
+            word-wrap: break-word;
+        }
+
+        .my-message {
+            background: #dcfce7;
+            margin-left: auto;
+        }
+
+        .received-message {
+            background: #ede9fe;
+            margin-right: auto;
+        }
+
+        .system-message {
+            background: #e2e8f0;
+            margin: 0 auto 12px auto;
+            text-align: center;
+            max-width: 90%;
+            color: #475569;
+        }
+
+        /* ============================= */
+        /* INPUT */
+        /* ============================= */
+
+        .input-area {
+            display: flex;
+            padding: 15px;
+            border-top: 1px solid #ddd;
+            gap: 10px;
+        }
+
+        .input-area input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            outline: none;
+            font-size: 15px;
+        }
+
+        .input-area input:focus {
+            border-color: #2563eb;
+        }
+
+        .send-button {
+            background: #16a34a;
+        }
+
+        /* ============================= */
+        /* BUTTON */
+        /* ============================= */
+
+        button {
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            opacity: 0.85;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* ============================= */
+        /* NOTIFICATION POPUP */
+        /* ============================= */
+
+        .notification {
+            position: fixed;
+            top: 90px;
+            right: 25px;
+            width: 320px;
+            background: white;
+            border-radius: 12px;
+            padding: 18px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+            display: none;
+            z-index: 3000;
+            border-left: 5px solid #2563eb;
+            animation: slideIn 0.4s ease;
+        }
+
+        .notification-title {
+            font-size: 17px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .notification-message {
+            color: #475569;
+            font-size: 14px;
+        }
+
+        .notification-close {
+            position: absolute;
+            top: 8px;
+            right: 12px;
+            color: #64748b;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* ============================= */
+        /* MOBILE */
+        /* ============================= */
+
+        @media (max-width: 700px) {
+            .header {
+                font-size: 18px;
+                padding: 0 15px;
+            }
+
+            .header-user {
+                font-size: 12px;
+            }
+
+            .logout-button {
+                padding: 7px 10px;
+            }
+
+            .chat-container {
+                height: calc(100vh - 70px);
+                padding: 10px;
+            }
+
+            .message {
+                max-width: 85%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ============================= -->
+    <!-- LOGIN / SIGNUP SCREEN -->
+    <!-- ============================= -->
+
+    <div id="authScreen" class="auth-screen">
+
+        <div class="auth-box">
+
+            <h2>💬 Chat Application</h2>
+
+            <p id="authTitle">Login</p>
+
+            <input
+                id="authUsername"
+                type="text"
+                placeholder="Enter username"
+                autocomplete="username"
+            >
+
+            <input
+                id="authPassword"
+                type="password"
+                placeholder="Enter password"
+                autocomplete="current-password"
+            >
+
+            <button
+                class="auth-button"
+                onclick="login()"
+            >
+                Login
+            </button>
+
+            <button
+                class="signup-button"
+                onclick="signup()"
+            >
+                Create Account
+            </button>
+
+            <p id="authMessage"></p>
+
+        </div>
+
+    </div>
+
+
+    <!-- ============================= -->
+    <!-- HEADER -->
+    <!-- ============================= -->
+
+    <div class="header">
+
+        <span>💬 FastAPI WebSocket Chat</span>
+
+        <div class="header-user">
+
+            <span id="loggedInUser">
+                Not logged in
+            </span>
+
+            <button
+                class="logout-button"
+                onclick="logout()"
+            >
+                Logout
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- ============================= -->
+    <!-- CHAT -->
+    <!-- ============================= -->
+
+    <div class="chat-container">
+
+        <div class="user-box">
+
+            <div class="user-header user1-header">
+
+                <span id="chatTitle">
+                    💬 Chat
+                </span>
+
+                <span
+                    id="status"
+                    class="status"
+                >
+                    Offline
+                </span>
+
+            </div>
+
+
+            <div
+                id="messages"
+                class="messages"
+            ></div>
+
+
+            <div class="input-area">
+
+                <input
+                    id="messageInput"
+                    type="text"
+                    placeholder="Type message..."
+                    onkeypress="handleEnter(event)"
+                    disabled
+                >
+
+                <button
+                    id="sendButton"
+                    class="send-button"
+                    onclick="sendMessage()"
+                    disabled
+                >
+                    Send
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ============================= -->
+    <!-- POPUP NOTIFICATION -->
+    <!-- ============================= -->
+
+    <div
+        id="notification"
+        class="notification"
+    >
+
+        <span
+            class="notification-close"
+            onclick="closeNotification()"
+        >
+            ✕
+        </span>
+
+        <div
+            id="notificationTitle"
+            class="notification-title"
+        >
+            🔔 New Message
+        </div>
+
+        <div
+            id="notificationMessage"
+            class="notification-message"
+        ></div>
+
+    </div>
+
+
+    <script>
+
+        // =====================================
+        // GLOBAL VARIABLES
+        // =====================================
+
+        let socket = null;
+
+        let notificationTimer = null;
+
+
+        // =====================================
+        // SIGNUP
+        // =====================================
+
+        async function signup() {
+
+            const username =
+                document.getElementById("authUsername").value.trim();
+
+            const password =
+                document.getElementById("authPassword").value;
+
+
+            if (!username || !password) {
+
+                setAuthMessage(
+                    "Please enter username and password",
+                    true
+                );
+
+                return;
+            }
+
+
+            if (password.length < 6) {
+
+                setAuthMessage(
+                    "Password must be at least 6 characters",
+                    true
+                );
+
+                return;
+            }
+
+
+            try {
+
+                const response = await fetch("/signup", {
+
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        username: username,
+                        password: password
+                    })
+
+                });
+
+
+                const data = await response.json();
+
+
+                if (!response.ok) {
+
+                    setAuthMessage(
+                        data.detail || "Signup failed",
+                        true
+                    );
+
+                    return;
+                }
+
+
+                setAuthMessage(
+                    "✅ Account created successfully. Now login.",
+                    false
+                );
+
+
+                // Keep username so user only needs to enter password
+                document.getElementById("authUsername").value =
+                    username;
+
+                document.getElementById("authPassword").value = "";
+
+            }
+
+            catch (error) {
+
+                console.error("Signup error:", error);
+
+                setAuthMessage(
+                    "Server error. Is FastAPI running?",
+                    true
+                );
+
+            }
+
+        }
+
+
+        // =====================================
+        // LOGIN
+        // =====================================
+
+        async function login() {
+
+            const username =
+                document.getElementById("authUsername").value.trim();
+
+            const password =
+                document.getElementById("authPassword").value;
+
+
+            if (!username || !password) {
+
+                setAuthMessage(
+                    "Please enter username and password",
+                    true
+                );
+
+                return;
+            }
+
+
+            try {
+
+                const response = await fetch("/login", {
+
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        username: username,
+                        password: password
+                    })
+
+                });
+
+
+                const data = await response.json();
+
+
+                if (!response.ok) {
+
+                    setAuthMessage(
+                        data.detail || "Login failed",
+                        true
+                    );
+
+                    return;
+                }
+
+
+                // =================================
+                // STORE JWT
+                // =================================
+
+                localStorage.setItem(
+                    "token",
+                    data.access_token
+                );
+
+
+                localStorage.setItem(
+                    "username",
+                    data.username
+                );
+
+
+                console.log("JWT stored successfully");
+
+
+                // =================================
+                // HIDE LOGIN SCREEN
+                // =================================
+
+                document.getElementById("authScreen").style.display =
+                    "none";
+
+
+                // =================================
+                // SHOW USER
+                // =================================
+
+                document.getElementById("loggedInUser").innerText =
+                    "👤 " + data.username;
+
+
+                document.getElementById("chatTitle").innerText =
+                    "💬 " + data.username + " Chat";
+
+
+                // =================================
+                // CONNECT WEBSOCKET
+                // =================================
+
+                connectWebSocket();
+
+            }
+
+            catch (error) {
+
+                console.error("Login error:", error);
+
+                setAuthMessage(
+                    "Server error. Is FastAPI running?",
+                    true
+                );
+
+            }
+
+        }
+
+
+        // =====================================
+        // AUTH MESSAGE
+        // =====================================
+
+        function setAuthMessage(message, isError) {
+
+            const element =
+                document.getElementById("authMessage");
+
+            element.innerText = message;
+
+            element.style.color =
+                isError ? "#dc2626" : "#16a34a";
+
+        }
+
+
+        // =====================================
+        // CONNECT WEBSOCKET
+        // =====================================
+
+        function connectWebSocket() {
+
+            const token =
+                localStorage.getItem("token");
+
+            const username =
+                localStorage.getItem("username");
+
+
+            if (!token) {
+
+                console.log("No JWT token found");
+
+                showLoginScreen();
+
+                return;
+            }
+
+
+            console.log(
+                "Connecting WebSocket for:",
+                username
+            );
+
+
+            // =================================
+            // CREATE ONE WEBSOCKET CONNECTION
+            // =================================
+
+            socket = new WebSocket(
+                `ws://127.0.0.1:8000/ws?token=${encodeURIComponent(token)}`
+            );
+
+
+            // =================================
+            // CONNECTION OPEN
+            // =================================
+
+            socket.onopen = function() {
+
+                console.log(
+                    username + " WebSocket connected"
+                );
+
+
+                document.getElementById("status").innerText =
+                    "🟢 Online";
+
+
+                document.getElementById("messageInput").disabled =
+                    false;
+
+
+                document.getElementById("sendButton").disabled =
+                    false;
+
+
+                addMessage(
+                    "system",
+                    "Connected as " + username,
+                    "system-message"
+                );
+
+            };
+
+
+            // =================================
+            // RECEIVE MESSAGE
+            // =================================
+
+            socket.onmessage = function(event) {
+
+                console.log(
+                    "Message received:",
+                    event.data
+                );
+
+
+                // Add received message
+                addMessage(
+                    "received",
+                    event.data,
+                    "received-message"
+                );
+
+
+                // Popup notification
+                showNotification(
+                    "New Message",
+                    event.data
+                );
+
+
+                // Browser notification
+                browserNotification(
+                    "New Message",
+                    event.data
+                );
+
+            };
+
+
+            // =================================
+            // CONNECTION CLOSED
+            // =================================
+
+            socket.onclose = function(event) {
+
+                console.log(
+                    "WebSocket disconnected",
+                    event.code,
+                    event.reason
+                );
+
+
+                document.getElementById("status").innerText =
+                    "🔴 Offline";
+
+
+                document.getElementById("messageInput").disabled =
+                    true;
+
+
+                document.getElementById("sendButton").disabled =
+                    true;
+
+
+                // Don't remove JWT automatically.
+                // User can login again or reconnect.
+
+            };
+
+
+            // =================================
+            // WEBSOCKET ERROR
+            // =================================
+
+            socket.onerror = function(error) {
+
+                console.error(
+                    "WebSocket error:",
+                    error
+                );
+
+            };
+
+        }
+
+
+        // =====================================
+        // SEND MESSAGE
+        // =====================================
+
+        function sendMessage() {
+
+            const input =
+                document.getElementById("messageInput");
+
+
+            const message =
+                input.value.trim();
+
+
+            // Empty message
+            if (message === "") {
+
+                return;
+            }
+
+
+            // WebSocket does not exist
+            if (!socket) {
+
+                alert("WebSocket is not connected");
+
+                return;
+            }
+
+
+            // WebSocket is not OPEN
+            if (socket.readyState !== WebSocket.OPEN) {
+
+                alert("WebSocket is not connected");
+
+                return;
+            }
+
+
+            // =================================
+            // SEND MESSAGE
+            // =================================
+
+            socket.send(message);
+
+
+            // =================================
+            // SHOW OUR OWN MESSAGE
+            // =================================
+
+            addMessage(
+                "sent",
+                "You: " + message,
+                "my-message"
+            );
+
+
+            // Clear input
+            input.value = "";
+
+        }
+
+
+        // =====================================
+        // ADD MESSAGE
+        // =====================================
+
+        function addMessage(
+            type,
+            message,
+            className
+        ) {
+
+            const container =
+                document.getElementById("messages");
+
+
+            const div =
+                document.createElement("div");
+
+
+            div.className =
+                "message " + className;
+
+
+            div.innerText =
+                message;
+
+
+            container.appendChild(div);
+
+
+            // Scroll to bottom
+            container.scrollTop =
+                container.scrollHeight;
+
+        }
+
+
+        // =====================================
+        // POPUP NOTIFICATION
+        // =====================================
+
+        function showNotification(
+            user,
+            message
+        ) {
+
+            document.getElementById(
+                "notificationTitle"
+            ).innerText =
+                "🔔 " + user;
+
+
+            document.getElementById(
+                "notificationMessage"
+            ).innerText =
+                message;
+
+
+            document.getElementById(
+                "notification"
+            ).style.display =
+                "block";
+
+
+            // Clear old timer
+            if (notificationTimer) {
+
+                clearTimeout(notificationTimer);
+
+            }
+
+
+            // Hide after 4 seconds
+            notificationTimer =
+                setTimeout(
+                    closeNotification,
+                    4000
+                );
+
+        }
+
+
+        // =====================================
+        // CLOSE NOTIFICATION
+        // =====================================
+
+        function closeNotification() {
+
+            document.getElementById(
+                "notification"
+            ).style.display =
+                "none";
+
+        }
+
+
+        // =====================================
+        // BROWSER NOTIFICATION
+        // =====================================
+
+        function browserNotification(
+            user,
+            message
+        ) {
+
+            if (!("Notification" in window)) {
+
+                return;
+            }
+
+
+            if (Notification.permission === "default") {
+
+                Notification.requestPermission()
+                    .then(function(permission) {
+
+                        if (permission === "granted") {
+
+                            new Notification(
+                                "💬 " + user,
+                                {
+                                    body: message
+                                }
+                            );
+
+                        }
+
+                    });
+
+            }
+
+            else if (
+                Notification.permission === "granted"
+            ) {
+
+                new Notification(
+                    "💬 " + user,
+                    {
+                        body: message
+                    }
+                );
+
+            }
+
+        }
+
+
+        // =====================================
+        // ENTER KEY
+        // =====================================
+
+        function handleEnter(event) {
+
+            if (event.key === "Enter") {
+
+                sendMessage();
+
+            }
+
+        }
+
+
+        // =====================================
+        // LOGOUT
+        // =====================================
+
+        function logout() {
+
+            // Close WebSocket
+            if (socket) {
+
+                socket.close();
+
+                socket = null;
+
+            }
+
+
+            // Remove JWT
+            localStorage.removeItem("token");
+
+            localStorage.removeItem("username");
+
+
+            // Clear messages
+            document.getElementById("messages").innerHTML =
+                "";
+
+
+            // Disable chat
+            document.getElementById("messageInput").disabled =
+                true;
+
+            document.getElementById("sendButton").disabled =
+                true;
+
+
+            // Reset status
+            document.getElementById("status").innerText =
+                "Offline";
+
+
+            // Show login
+            showLoginScreen();
+
+        }
+
+
+        // =====================================
+        // SHOW LOGIN SCREEN
+        // =====================================
+
+        function showLoginScreen() {
+
+            document.getElementById("authScreen").style.display =
+                "flex";
+
+
+            document.getElementById("loggedInUser").innerText =
+                "Not logged in";
+
+
+            document.getElementById("chatTitle").innerText =
+                "💬 Chat";
+
+
+            document.getElementById("authPassword").value =
+                "";
+
+        }
+
+
+        // =====================================
+        // AUTO LOGIN CHECK
+        // =====================================
+
+        function checkExistingLogin() {
+
+            const token =
+                localStorage.getItem("token");
+
+            const username =
+                localStorage.getItem("username");
+
+
+            if (token && username) {
+
+                console.log(
+                    "Existing JWT found for:",
+                    username
+                );
+
+
+                document.getElementById("authScreen").style.display =
+                    "none";
+
+
+                document.getElementById("loggedInUser").innerText =
+                    "👤 " + username;
+
+
+                document.getElementById("chatTitle").innerText =
+                    "💬 " + username + " Chat";
+
+
+                // Connect only after token exists
+                connectWebSocket();
+
+            }
+
+            else {
+
+                showLoginScreen();
+
+            }
+
+        }
+
+
+        // =====================================
+        // START APPLICATION
+        // =====================================
+
+        // IMPORTANT:
+        // There is NO connectUser1()
+        // There is NO connectUser2()
+        //
+        // WebSocket starts only after login.
+
+        checkExistingLogin();
+
+    </script>
+
+</body>
+
+</html>
